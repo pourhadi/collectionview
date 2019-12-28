@@ -41,6 +41,7 @@ struct CollectionView_Previews: PreviewProvider {
 
 ```
 
+
 ### CollectionView init parameters
 
 #### items: Binding<[Item]>
