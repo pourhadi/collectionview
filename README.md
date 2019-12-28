@@ -12,25 +12,31 @@ Add `import CollectionView` to your SwiftUI file and add `CollectionView(...)` t
 import SwiftUI
 import CollectionView
 
-struct YourItemModel: Identifiable, Equatable {
-    var id: Int
-    var image: UIImage
-}
-
-struct YourView: View {
-
-    @Binding var items: [YourItemModel]
-    @Binding var selectedItems: [YourItemModel]
-    @Binding var selectionMode: Bool
+struct CollectionView_Previews: PreviewProvider {
+    struct ItemModel: Identifiable, Equatable {
+        let id: Int
+        let color: Color
+    }
     
-    var body: some View {
-        NavigationView {
-            CollectionView(items: self.$items, selectedItems: self.$selectedItems, selectionMode: self.$selectionMode)  { (item, collectionViewMetrics, itemMetrics) -> AnyView in
-                return AnyView(Image(uiImage: item.image))
-            }
+    @State static var items = [ItemModel(id: 0, color: Color.red),
+                               ItemModel(id: 1, color: Color.blue),
+                               ItemModel(id: 2, color: Color.green),
+                               ItemModel(id: 3, color: Color.yellow),
+                               ItemModel(id: 4, color: Color.orange),
+                               ItemModel(id: 5, color: Color.purple)]
+    
+    @State static var selectedItems = [ItemModel]()
+    @State static var selectionMode = false
+    
+    static var previews: some View {
+        CollectionView(items: $items,
+                       selectedItems: $selectedItems,
+                       selectionMode: $selectionMode)
+        { item, _, _ in
+            Rectangle()
+                .foregroundColor(item.color)
         }
     }
-
 }
 
 ```
