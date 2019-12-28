@@ -26,7 +26,7 @@ struct YourView: View {
     var body: some View {
         NavigationView {
             CollectionView(items: self.$items, selectedItems: self.$selectedItems, selectionMode: self.$selectionMode)  { (item, collectionViewMetrics, itemMetrics) -> AnyView in
-                return Image(uiImage: item.image)
+                return AnyView(Image(uiImage: item.image))
             }
         }
     }
