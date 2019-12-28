@@ -16,7 +16,7 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
         case sameAsItemWidth
         case dynamic(CollectionViewRowHeightBlock)
     }
-        
+    
     @Binding var items: [Item]
     @Binding var selectedItems: [Item]
     @Binding var selectionMode: Bool
@@ -29,13 +29,13 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
     let tapAction: ((Item, GeometryProxy) -> Void)?
     
     public init(items: Binding<[Item]>,
-         selectedItems: Binding<[Item]>,
-         selectionMode: Binding<Bool>,
-         itemSpacing: CGFloat = 2,
-         numberOfColumns: Int = 3,
-         rowHeight: RowHeight = .sameAsItemWidth,
-         tapAction: ((Item, GeometryProxy) -> Void)? = nil,
-         @ViewBuilder itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent) {
+                selectedItems: Binding<[Item]>,
+                selectionMode: Binding<Bool>,
+                itemSpacing: CGFloat = 2,
+                numberOfColumns: Int = 3,
+                rowHeight: RowHeight = .sameAsItemWidth,
+                tapAction: ((Item, GeometryProxy) -> Void)? = nil,
+                @ViewBuilder itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent) {
         self._items = items
         self._selectedItems = selectedItems
         self._selectionMode = selectionMode
@@ -45,7 +45,7 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
         self.numberOfColumns = numberOfColumns
         self.rowHeight = rowHeight
     }
-
+    
     private struct ItemRow: Identifiable {
         let id: Int
         let items: [Item]
@@ -68,7 +68,7 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
         if currentRow.count > 0 {
             rows.append(ItemRow(id: rows.count, items: currentRow))
         }
-                
+        
         return GeometryReader { metrics in
             ScrollView {
                 VStack(spacing: self.itemSpacing) {
@@ -86,17 +86,19 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
                 GeometryReader { itemMetrics in
                     Group {
                         self.itemBuilder(item, metrics, itemMetrics)
+                        
                         if self.selectionMode {
                             Circle()
                                 .stroke(Color.white, lineWidth: 2)
                                 .frame(width: 20, height: 20)
                                 .background(self.selectedItems.contains(item) ? Color.blue : Color.clear)
                                 .position(x: itemMetrics.size.width - 18, y: itemMetrics.size.height - 18)
-                                
                                 .shadow(radius: 2)
                         }
-                    }.frame(width: itemMetrics.size.width, height: itemMetrics.size.height)
-                    .onTapGesture {
+                    }.allowsHitTesting(false)
+                    
+                    /// Workaround for a goofy bug where onTapGesture doesn't seem to respect clipping boundaries
+                    Button(action: {
                         if self.selectionMode {
                             if let index = self.selectedItems.firstIndex(of: item) {
                                 self.selectedItems.remove(at: index)
@@ -108,11 +110,13 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
                         }
                         
                         self.tapAction?(item, itemMetrics)
+                    }) {
+                        Rectangle().foregroundColor(Color.clear).frame(width: itemMetrics.size.width, height: itemMetrics.size.height)
                     }
                 }
             }
-            
         }.frame(height: self.getRowHeight(for: row.id, metrics: metrics))
+            .clipped()
         
     }
     
@@ -123,6 +127,34 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
             return (metrics.size.width / CGFloat(numberOfColumns)) - (itemSpacing * CGFloat(numberOfColumns - 1))
         case .dynamic(let rowHeightBlock):
             return rowHeightBlock(row, metrics, itemSpacing, numberOfColumns)
+        }
+    }
+}
+
+
+struct CollectionView_Previews: PreviewProvider {
+    struct ItemModel: Identifiable, Equatable {
+        let id: Int
+        let color: Color
+    }
+    
+    @State static var items = [ItemModel(id: 0, color: Color.red),
+                               ItemModel(id: 1, color: Color.blue),
+                               ItemModel(id: 2, color: Color.green),
+                               ItemModel(id: 3, color: Color.yellow),
+                               ItemModel(id: 4, color: Color.orange),
+                               ItemModel(id: 5, color: Color.purple)]
+    
+    @State static var selectedItems = [ItemModel]()
+    @State static var selectionMode = false
+    
+    static var previews: some View {
+        CollectionView(items: $items,
+                       selectedItems: $selectedItems,
+                       selectionMode: $selectionMode)
+        { item, _, _ in
+            Rectangle()
+                .foregroundColor(item.color)
         }
     }
 }
