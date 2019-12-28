@@ -95,7 +95,8 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
                                 
                                 .shadow(radius: 2)
                         }
-                    }.onTapGesture {
+                    }.frame(width: itemMetrics.size.width, height: itemMetrics.size.height)
+                    .onTapGesture {
                         if self.selectionMode {
                             if let index = self.selectedItems.firstIndex(of: item) {
                                 self.selectedItems.remove(at: index)
@@ -107,7 +108,7 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
                         }
                         
                         self.tapAction?(item, itemMetrics)
-                    }.frame(width: itemMetrics.size.width, height: itemMetrics.size.height)
+                    }
                 }
             }
             
