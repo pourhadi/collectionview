@@ -28,7 +28,7 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
     
     let tapAction: ((Item, GeometryProxy) -> Void)?
     
-    init(items: Binding<[Item]>,
+    public init(items: Binding<[Item]>,
          selectedItems: Binding<[Item]>,
          selectionMode: Binding<Bool>,
          itemSpacing: CGFloat = 2,
