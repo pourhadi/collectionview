@@ -44,17 +44,13 @@ struct CollectionView_Previews: PreviewProvider {
 
 ### CollectionView init parameters
 
->   ```swift
->   items: Binding<[Item]>
->   ```
+ * `items: Binding<[Item]>`
 
-    Required. 
+Required. 
 
-    A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
+A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
 
->   ```swift
->   selectedItems: Binding<[Item]>
->   ```
+* `selectedItems: Binding<[Item]>`
 
 Required.
 
@@ -62,33 +58,25 @@ A binding to an array of values that conform to `Identifiable` and `Equatable`.
 
 When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item.
 
-```swift
-selectionMode: Binding<Bool>
-```
+* `selectionMode: Binding<Bool>`
 
 Required.
 
 A binding to a bool value. Set to true to set the collection view in to selection mode.
 
-```swift
-itemSpacing: CGFloat
-```
+* `itemSpacing: CGFloat`
 
 Not required. Defaults to 2.0.
 
 The distance between successive items in a row and between rows.
 
-```swift
-numberOfColumns: Int
-```
+* `numberOfColumns: Int`
 
 Not required. Defaults to 3.
 
 The number of columns in a row.
 
-```swift
-rowHeight: CollectionView.RowHeight
-```
+* `rowHeight: CollectionView.RowHeight`
 
 Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
 
@@ -104,17 +92,13 @@ An enum for setting the desired height for the collection view's rows.
 >   }
 >    ```
 
-```swift
-tapAction: ((Item, GeometryProxy) -> Void)?
-```
+* `tapAction: ((Item, GeometryProxy) -> Void)?`
 
 Not required. Defaults to nil.
 
 A block that will be called if an item is tapped on.
 
-```swift
-itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)
-```
+* `itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)`
 
 Required.
 
