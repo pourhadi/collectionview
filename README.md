@@ -75,6 +75,16 @@ Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
 
 An enum for setting the desired height for the collection view's rows.
 
+```swift
+public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
+    
+public enum RowHeight {
+    case constant(CGFloat)
+    case sameAsItemWidth
+    case dynamic(CollectionViewRowHeightBlock)
+}
+ ```
+
 #### tapAction: ((Item, GeometryProxy) -> Void)?
 
 Not required. Defaults to nil.
