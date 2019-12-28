@@ -44,13 +44,17 @@ struct CollectionView_Previews: PreviewProvider {
 
 ### CollectionView init parameters
 
-#### items: Binding<[Item]>
+```swift
+items: Binding<[Item]>
+```
 
 Required. 
 
 A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
 
-#### selectedItems: Binding<[Item]>
+```swift
+selectedItems: Binding<[Item]>
+```
 
 Required.
 
@@ -58,47 +62,59 @@ A binding to an array of values that conform to `Identifiable` and `Equatable`.
 
 When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item.
 
-#### selectionMode: Binding\<Bool\>
+```swift
+selectionMode: Binding<Bool>
+```
 
 Required.
 
 A binding to a bool value. Set to true to set the collection view in to selection mode.
 
-#### itemSpacing: CGFloat
+```swift
+itemSpacing: CGFloat
+```
 
 Not required. Defaults to 2.0.
 
 The distance between successive items in a row and between rows.
 
-#### numberOfColumns: Int
+```swift
+numberOfColumns: Int
+```
 
 Not required. Defaults to 3.
 
 The number of columns in a row.
 
-#### rowHeight: CollectionView.RowHeight
+```swift
+rowHeight: CollectionView.RowHeight
+```
 
 Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
 
 An enum for setting the desired height for the collection view's rows.
 
-```swift
-public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
-    
-public enum RowHeight {
-    case constant(CGFloat)
-    case sameAsItemWidth
-    case dynamic(CollectionViewRowHeightBlock)
-}
- ```
+>   ```swift
+>   public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
+>       
+>   public enum RowHeight {
+>       case constant(CGFloat)
+>       case sameAsItemWidth
+>       case dynamic(CollectionViewRowHeightBlock)
+>   }
+>    ```
 
-#### tapAction: ((Item, GeometryProxy) -> Void)?
+```swift
+tapAction: ((Item, GeometryProxy) -> Void)?
+```
 
 Not required. Defaults to nil.
 
 A block that will be called if an item is tapped on.
 
-#### itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)
+```swift
+itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)
+```
 
 Required.
 
