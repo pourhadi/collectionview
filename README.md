@@ -8,7 +8,7 @@ Updates and documentation to follow.
 
 Add `import CollectionView` to your SwiftUI file and add `CollectionView(...)` to your view hierarchy. 
 
-```
+```swift
 import SwiftUI
 import CollectionView
 
