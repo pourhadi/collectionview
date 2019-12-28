@@ -40,7 +40,7 @@ struct CollectionView_Previews: PreviewProvider {
 }
 
 ```
-
+![Screenshot](https://github.com/pourhadi/collectionview/blob/master/screenshot.png?raw=true)
 
 ### CollectionView init parameters
 
