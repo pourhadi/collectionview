@@ -4,6 +4,16 @@ A SwiftUI implementation of a grid layout similar to UICollectionView with UICol
 
 Updates and documentation to follow.
 
+## Features
+
+* Bindings to the data source and selected items
+* Selection mode
+* Custom column count
+* Custom row height
+* Custom spacing
+* Block-based tap actions
+* @ViewBuilder to produce each item's view (cell)
+
 ## Usage
 
 Add `import CollectionView` to your SwiftUI file and add `CollectionView(...)` to your view hierarchy. 
