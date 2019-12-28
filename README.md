@@ -1,6 +1,6 @@
 # CollectionView
 
-A SwiftUI implementation of a grid layout similar to UICollectionView.
+A SwiftUI implementation of a grid layout similar to UICollectionView with UICollectionViewFlowLayout.
 
 Updates and documentation to follow.
 
