@@ -8,6 +8,33 @@ Updates and documentation to follow.
 
 Add `import CollectionView` to your SwiftUI file and add `CollectionView(...)` to your view hierarchy. 
 
+```
+import SwiftUI
+import CollectionView
+
+struct YourItemModel: Identifiable, Equatable {
+    var id: Int
+    var image: UIImage
+}
+
+struct YourView: View {
+
+    @Binding var items: [YourItemModel]
+    @Binding var selectedItems: [YourItemModel]
+    @Binding var selectionMode: Bool
+    
+    var body: some View {
+        NavigationView {
+            CollectionView(items: self.$items, selectedItems: self.$selectedItems, selectionMode: self.$selectionMode)  { (item, collectionViewMetrics, itemMetrics) -> AnyView in
+                return Image(uiImage: item.image)
+            }
+        }
+    }
+
+}
+
+```
+
 ### CollectionView init parameters
 
 #### items: Binding<[Item]>
