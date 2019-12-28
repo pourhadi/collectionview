@@ -44,17 +44,17 @@ struct CollectionView_Previews: PreviewProvider {
 
 ### CollectionView init parameters
 
-```swift
-items: Binding<[Item]>
-```
+>   ```swift
+>   items: Binding<[Item]>
+>   ```
 
-Required. 
+    Required. 
 
-A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
+    A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
 
-```swift
-selectedItems: Binding<[Item]>
-```
+>   ```swift
+>   selectedItems: Binding<[Item]>
+>   ```
 
 Required.
 
