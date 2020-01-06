@@ -11,7 +11,7 @@ Updates and documentation to follow.
 * Custom column count
 * Custom row height
 * Custom spacing
-* Block-based tap actions
+* Block-based tap and long-press actions
 * @ViewBuilder to produce each item's view (cell)
 
 ## Usage
@@ -74,33 +74,28 @@ struct CollectionView_Previews: PreviewProvider {
 
     A binding to a bool value. Set to true to set the collection view in to selection mode.
 
-* `itemSpacing: CGFloat`
+* `layout: CollectionView.Layout`
 
-    Not required. Defaults to 2.0.
+    Not required. Default is `CollectionView.Layout()`
+    
+    `Layout` is a struct containing the layout information for the collection view, with the defaults:
+   
+        * `itemSpacing: CGFloat` = 2.0
+        * `numberOfColumns: Int` = 3   
+        * `rowHeight: CollectionView.RowHeight` = .sameAsItemWidth
 
-    The distance between successive items in a row and between rows.
+            An enum for setting the desired height for the collection view's rows.
 
-* `numberOfColumns: Int`
+             ```swift
+             public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
 
-    Not required. Defaults to 3.
-
-    The number of columns in a row.
-
-* `rowHeight: CollectionView.RowHeight`
-
-    Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
-
-    An enum for setting the desired height for the collection view's rows.
-
-     ```swift
-     public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
-         
-     public enum RowHeight {
-         case constant(CGFloat)
-         case sameAsItemWidth
-         case dynamic(CollectionViewRowHeightBlock)
-     }
-      ```
+             public enum RowHeight {
+                 case constant(CGFloat)
+                 case sameAsItemWidth
+                 case dynamic(CollectionViewRowHeightBlock)
+             }
+              ```
+        * `rowPadding: EdgeInsets` = EdgeInsets initialized with all zeros.
 
 * `tapAction: ((Item, GeometryProxy) -> Void)?`
 
@@ -108,11 +103,25 @@ struct CollectionView_Previews: PreviewProvider {
 
     A block that will be called if an item is tapped on.
 
-* `itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)`
+* `longPressAction: ((Item, GeometryProxy) -> Void)?`
+
+    Not required. Defaults to nil.
+
+    A block that will be called after a successful long-press gesture on the item cell.
+    
+* `pressAction: ((Item, Bool) -> Void)?`
+
+    Not required. Defaults to nil.
+
+    A block that will be called when a long-press gesture is possible, with a bool indicating whether the item is being pressed.
+    
+* `itemBuilder: @escaping (Item, _ itemMetrics: GeometryProxy) -> ItemContent)`
 
     Required.
 
     A block that produces the view (cell) associated with a particular item.
+    
+
 
 ## Planned features:
 * Sections
