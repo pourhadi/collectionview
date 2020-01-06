@@ -6,8 +6,192 @@
 //
 
 import SwiftUI
+import Combine
 
-public struct CollectionView<Item, ItemContent>: View where Item : Identifiable & Equatable, ItemContent : View {
+private let AssociationManager = NSObject()
+
+fileprivate struct AssociatedKeys {
+    static var store: UInt8 = 0
+}
+
+public extension CollectionView {
+    func rowPadding(_ padding: EdgeInsets) -> Self {
+        self.layout.rowPadding = padding
+        return self
+    }
+    
+    func itemSpacing(_ itemSpacing: CGFloat) -> Self {
+        self.layout.itemSpacing = itemSpacing
+        return self
+    }
+    
+    func numberOfColumns(_ numberOfColumns: Int) -> Self {
+        self.layout.numberOfColumns = numberOfColumns
+        return self
+    }
+    
+    func rowHeight(_ rowHeight: RowHeight) -> Self {
+        self.layout.rowHeight = rowHeight
+        return self
+    }
+}
+
+fileprivate let ScrollViewCoordinateSpaceKey = "ScrollViewCoordinateSpace"
+
+private struct LazyRowContainer<Content> : View where Content : View {
+    
+    @State var visible = false
+    
+    let content: (Bool) -> Content
+    let visibleRowsPublisher: AnyPublisher<[Int], Never>
+    let rowId: Int
+    
+    init(rowId: Int,
+         visibleRowsPublisher: AnyPublisher<[Int], Never>,
+         currentVisibleRows: [Int],
+         @ViewBuilder _ content: @escaping (Bool) -> Content) {
+        self.rowId = rowId
+        self.visibleRowsPublisher = visibleRowsPublisher
+        self.content = content
+        
+        self.visible = currentVisibleRows.contains(rowId)
+    }
+    
+    var body : some View {
+        return self.content(self.visible)
+            .onReceive(self.visibleRowsPublisher) { (visibleRows) in
+                let vis = visibleRows.contains(self.rowId)
+                
+                if vis != self.visible {
+                    self.visible = vis
+                }
+        }
+    }
+    
+}
+
+
+public struct AsynchronousView : View {
+    
+    @State var content: AnyView? = nil
+    
+    let contentFuture: AnyPublisher<AnyView?, Never>
+
+    public var body : some View {
+        Group {
+            if content != nil {
+                self.content!
+            }
+            
+            EmptyView()
+        }.onReceive(self.contentFuture) { (content) in
+            self.content = content
+        }
+    }
+}
+
+public struct CollectionView<Item, ItemContent>: View where ItemContent : View, Item : Identifiable & Equatable {
+    private struct Row<Content> : View where Content : View {
+        
+        @Binding var selectedItems: [Item]
+        @Binding var selectionMode: Bool
+        
+        let content: () -> Content
+        
+        init(selectedItems: Binding<[Item]>,
+             selectionMode: Binding<Bool>,
+             @ViewBuilder content: @escaping () -> Content) {
+            self._selectedItems = selectedItems
+            self._selectionMode = selectionMode
+            self.content = content
+        }
+        
+        var body : some View {
+            self.content()
+        }
+        
+    }
+    
+    
+    public struct Layout {
+        public var rowPadding: EdgeInsets
+        public var numberOfColumns: Int
+        public var itemSpacing: CGFloat
+        public var rowHeight: RowHeight
+        
+        public init(rowPadding: EdgeInsets = EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0),
+                    numberOfColumns: Int = 3,
+                    itemSpacing: CGFloat = 2,
+                    rowHeight: RowHeight = .sameAsItemWidth) {
+            self.rowPadding = rowPadding
+            self.numberOfColumns = numberOfColumns
+            self.itemSpacing = itemSpacing
+            self.rowHeight = rowHeight
+        }
+    }
+    
+    
+    private class StateStore: ObservableObject {
+        
+        init() {
+            print("init it")
+        }
+        
+        var totalRows = 0
+        var mainMetrics: GeometryProxy?
+        
+        var mainFrame = CGRect.zero
+        
+        var parent: CollectionView?
+        var scrollViewFrame = CGRect.zero
+        var contentOffset = CGPoint.zero {
+            didSet {
+                guard let mainMetrics = mainMetrics else { return }
+                var visible = [Int]()
+                
+                let boundingFrame = CGRect(x: 0, y: -(mainMetrics.safeAreaInsets.top) - (mainMetrics.size.height / 2), width: mainMetrics.size.width, height: mainMetrics.size.height + (mainMetrics.size.height))
+                
+                
+                var currentY: CGFloat = 0
+                for x in 0..<self.totalRows {
+                    let height = self.height(for: x)
+                    let frame = CGRect(x: 0, y: currentY + contentOffset.y, width: mainMetrics.size.width, height: height)
+                    
+                    if frame.intersects(boundingFrame) {
+                        visible.append(x)
+                    }
+                    
+                    currentY += height
+                }
+                
+                print(visible.count)
+                self.visibleRows = visible
+            }
+        }
+        
+        var rowFrames = [Int: CGRect]()
+        
+        @Published var visibleRows = [Int]()
+        
+        var metrics = [GeometryProxy]()
+        
+        func height(for row: Int) -> CGFloat {
+            guard let parent = parent, let metrics = mainMetrics else {
+                return 0
+            }
+            
+            return parent.getRowHeight(for: row, metrics: metrics) + parent.layout.rowPadding.top + parent.layout.rowPadding.bottom
+        }
+    }
+    
+    @ObservedObject private var _store: StateStore
+    private var store:StateStore {
+        if _store.parent == nil {
+            _store.parent = self
+        }
+        
+        return _store
+    }
     
     public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
     
@@ -17,33 +201,47 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
         case dynamic(CollectionViewRowHeightBlock)
     }
     
-    @Binding var items: [Item]
-    @Binding var selectedItems: [Item]
-    @Binding var selectionMode: Bool
+    @State private var layout: Layout = Layout()
     
-    let numberOfColumns: Int
-    let itemSpacing: CGFloat
-    let rowHeight: RowHeight
-    let itemBuilder: (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent
+    @Binding private var items: [Item]
     
-    let tapAction: ((Item, GeometryProxy) -> Void)?
+    private var selectedItems: Binding<[Item]>
+    private var selectionMode: Binding<Bool>
     
+    private var numberOfColumns: Int {
+        return self.layout.numberOfColumns
+    }
+    
+    private var itemSpacing: CGFloat {
+        return self.layout.itemSpacing
+    }
+    
+    private var rowHeight: RowHeight {
+        return self.layout.rowHeight
+    }
+    
+    private let itemBuilder: (Item, GeometryProxy) -> ItemContent
+    private let tapAction: ((Item, GeometryProxy) -> Void)?
+    private let longPressAction: ((Item, GeometryProxy) -> Void)?
+    private let pressAction: ((Item, Bool) -> Void)?
+    
+
     public init(items: Binding<[Item]>,
                 selectedItems: Binding<[Item]>,
                 selectionMode: Binding<Bool>,
-                itemSpacing: CGFloat = 2,
-                numberOfColumns: Int = 3,
-                rowHeight: RowHeight = .sameAsItemWidth,
+                layout: Layout = Layout(),
                 tapAction: ((Item, GeometryProxy) -> Void)? = nil,
-                @ViewBuilder itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent) {
+                longPressAction: ((Item, GeometryProxy) -> Void)? = nil,
+                pressAction: ((Item, Bool) -> Void)? = nil,
+                @ViewBuilder itemBuilder: @escaping (Item, GeometryProxy) -> ItemContent) {
         self._items = items
-        self._selectedItems = selectedItems
-        self._selectionMode = selectionMode
-        self.itemSpacing = itemSpacing
+        self.selectedItems = selectedItems
+        self.selectionMode = selectionMode
         self.itemBuilder = itemBuilder
         self.tapAction = tapAction
-        self.numberOfColumns = numberOfColumns
-        self.rowHeight = rowHeight
+        self.longPressAction = longPressAction
+        self.pressAction = pressAction
+        self.layout = layout
     }
     
     private struct ItemRow: Identifiable {
@@ -69,62 +267,93 @@ public struct CollectionView<Item, ItemContent>: View where Item : Identifiable 
             rows.append(ItemRow(id: rows.count, items: currentRow))
         }
         
-        return GeometryReader { metrics in
-            ScrollView {
-                VStack(spacing: self.itemSpacing) {
-                    ForEach(rows) { row in
-                        self.getRow(for: row, metrics: metrics)
-                    }
+        self.store.totalRows = rows.count
+        
+        return Group {
+            GeometryReader { metrics in
+                ScrollView {
+                    VStack(spacing: self.itemSpacing) {
+                        ForEach(rows) { row in
+                            self.getRow(for: row, metrics: metrics, visible: true).padding(self.layout.rowPadding)
+                        }
+                    }.onAppear(perform: {
+                        self.store.mainMetrics = metrics
+                        self.store.scrollViewFrame = metrics.frame(in: .global)
+                        print("appear")
+                    }).coordinateSpace(name: ScrollViewCoordinateSpaceKey)
                 }
             }
         }
     }
     
-    private func getRow(for row: ItemRow, metrics: GeometryProxy) -> some View {
-        return HStack(spacing: self.itemSpacing) {
-            ForEach(row.items) { item in
-                GeometryReader { itemMetrics in
-                    Group {
-                        self.itemBuilder(item, metrics, itemMetrics)
-                        
-                        if self.selectionMode {
-                            Circle()
-                                .stroke(Color.white, lineWidth: 2)
-                                .frame(width: 20, height: 20)
-                                .background(self.selectedItems.contains(item) ? Color.blue : Color.clear)
-                                .position(x: itemMetrics.size.width - 18, y: itemMetrics.size.height - 18)
-                                .shadow(radius: 2)
-                        }
-                    }.allowsHitTesting(false)
-                    
-                    /// Workaround for a goofy bug where onTapGesture doesn't seem to respect clipping boundaries
-                    Button(action: {
-                        if self.selectionMode {
-                            if let index = self.selectedItems.firstIndex(of: item) {
-                                self.selectedItems.remove(at: index)
-                            } else {
-                                self.selectedItems.append(item)
+    private func getRow(for row: ItemRow, metrics: GeometryProxy, visible: Bool) -> some View {
+        return Row(selectedItems: self.selectedItems, selectionMode: self.selectionMode) {
+            HStack(spacing: self.itemSpacing) {
+                ForEach(row.items) { item in
+                    GeometryReader { itemMetrics in
+                        ZStack {
+                            Group {
+                                self.itemBuilder(item, itemMetrics)
+                                if self.selectionMode.wrappedValue {
+                                    Circle()
+                                        .stroke(Color.white, lineWidth: 2)
+                                        .frame(width: 20, height: 20)
+                                        .background(self.selectedItems.wrappedValue.contains(item) ? Color.blue : Color.clear)
+                                        .position(x: itemMetrics.size.width - 18, y: itemMetrics.size.height - 18)
+                                        .shadow(radius: 2)
+                                }
                             }
-                        } else {
-                            self.$selectedItems.wrappedValue = [item]
+                            .zIndex(2)
+                                .allowsHitTesting(false)
+
+                            Group {
+                                Rectangle().foregroundColor(Color.clear)
+                            }
+                            .background(Color(UIColor.systemBackground))
+                                .allowsHitTesting(true)
+                                .zIndex(1)
+                                .onTapGesture {
+                                    if self.selectionMode.wrappedValue {
+                                        if let index = self.selectedItems.wrappedValue.firstIndex(of: item) {
+                                            self.selectedItems.wrappedValue.remove(at: index)
+                                        } else {
+                                            self.selectedItems.wrappedValue.append(item)
+                                        }
+                                    } else {
+                                        self.selectedItems.wrappedValue = [item]
+                                    }
+                                    
+                                    self.tapAction?(item, itemMetrics)
+                            }
+                            .onLongPressGesture(minimumDuration: 0.25, maximumDistance: 10, pressing: { pressing in
+                                self.pressAction?(item, pressing)
+                                
+                            }) {
+                                self.longPressAction?(item, itemMetrics)
+                            }
                         }
-                        
-                        self.tapAction?(item, itemMetrics)
-                    }) {
-                        Rectangle().foregroundColor(Color.clear).frame(width: itemMetrics.size.width, height: itemMetrics.size.height)
                     }
                 }
-            }
-        }.frame(height: self.getRowHeight(for: row.id, metrics: metrics))
-            .clipped()
+            }.frame(height: self.getRowHeight(for: row.id, metrics: metrics))
+
+                
+        }
         
     }
     
-    private func getRowHeight(for row: Int, metrics: GeometryProxy) -> CGFloat {
+    private func getColumnWidth(for width: CGFloat) -> CGFloat {
+        let w = (((width - (self.layout.rowPadding.leading + self.layout.rowPadding.trailing + (self.layout.itemSpacing * CGFloat(self.layout.numberOfColumns - 1)))) / CGFloat(self.layout.numberOfColumns)))
+        
+        return w
+    }
+    
+    private func getRowHeight(for row: Int, metrics: GeometryProxy?) -> CGFloat {
+        guard let metrics = metrics else { return 0 }
+        
         switch self.rowHeight {
         case .constant(let constant): return constant
         case .sameAsItemWidth:
-            return (metrics.size.width / CGFloat(numberOfColumns)) - (itemSpacing * CGFloat(numberOfColumns - 1))
+            return self.getColumnWidth(for: metrics.size.width)
         case .dynamic(let rowHeightBlock):
             return rowHeightBlock(row, metrics, itemSpacing, numberOfColumns)
         }
@@ -137,22 +366,23 @@ struct CollectionView_Previews: PreviewProvider {
         let id: Int
         let color: Color
     }
-    
+
     @State static var items = [ItemModel(id: 0, color: Color.red),
                                ItemModel(id: 1, color: Color.blue),
                                ItemModel(id: 2, color: Color.green),
                                ItemModel(id: 3, color: Color.yellow),
                                ItemModel(id: 4, color: Color.orange),
                                ItemModel(id: 5, color: Color.purple)]
-    
+
+
     @State static var selectedItems = [ItemModel]()
     @State static var selectionMode = false
-    
+
     static var previews: some View {
         CollectionView(items: $items,
                        selectedItems: $selectedItems,
                        selectionMode: $selectionMode)
-        { item, _, _ in
+        { item, metrics in
             Rectangle()
                 .foregroundColor(item.color)
         }
