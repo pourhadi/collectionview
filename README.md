@@ -66,7 +66,7 @@ struct CollectionView_Previews: PreviewProvider {
 
     A binding to an array of values that conform to `Identifiable` and `Equatable`.
 
-    When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item.
+    When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item. Good to use for displaying / dismissing a child / detail view.
 
 * `selectionMode: Binding<Bool>`
 
