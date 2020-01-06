@@ -42,7 +42,7 @@ struct CollectionView_Previews: PreviewProvider {
         CollectionView(items: $items,
                        selectedItems: $selectedItems,
                        selectionMode: $selectionMode)
-        { item, _, _ in
+        { item, _, in
             Rectangle()
                 .foregroundColor(item.color)
         }
