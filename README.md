@@ -4,6 +4,16 @@ A SwiftUI implementation of a grid layout similar to UICollectionView with UICol
 
 Updates and documentation to follow.
 
+## Features
+
+* Bindings to the data source and selected items
+* Selection mode
+* Custom column count
+* Custom row height
+* Custom spacing
+* Block-based tap actions
+* @ViewBuilder to produce each item's view (cell)
+
 ## Usage
 
 Add `import CollectionView` to your SwiftUI file and add `CollectionView(...)` to your view hierarchy. 
@@ -40,69 +50,69 @@ struct CollectionView_Previews: PreviewProvider {
 }
 
 ```
-
+![Screenshot](https://github.com/pourhadi/collectionview/blob/master/screenshot.png?raw=true)
 
 ### CollectionView init parameters
 
-#### items: Binding<[Item]>
+ * `items: Binding<[Item]>`
 
-Required. 
+    Required. 
 
-A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
+    A binding to an array of values that conform to `Identifiable` and `Equatable`. This is the collection view's data source.
 
-#### selectedItems: Binding<[Item]>
+* `selectedItems: Binding<[Item]>`
 
-Required.
+    Required.
 
-A binding to an array of values that conform to `Identifiable` and `Equatable`.
+    A binding to an array of values that conform to `Identifiable` and `Equatable`.
 
-When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item.
+    When `selectionMode` is true, this will populate with the items selected by the user. When `selectionMode` is false, this will either be an empty array or be populated with the most-recently-selected item.
 
-#### selectionMode: Binding\<Bool\>
+* `selectionMode: Binding<Bool>`
 
-Required.
+    Required.
 
-A binding to a bool value. Set to true to set the collection view in to selection mode.
+    A binding to a bool value. Set to true to set the collection view in to selection mode.
 
-#### itemSpacing: CGFloat
+* `itemSpacing: CGFloat`
 
-Not required. Defaults to 2.0.
+    Not required. Defaults to 2.0.
 
-The distance between successive items in a row and between rows.
+    The distance between successive items in a row and between rows.
 
-#### numberOfColumns: Int
+* `numberOfColumns: Int`
 
-Not required. Defaults to 3.
+    Not required. Defaults to 3.
 
-The number of columns in a row.
+    The number of columns in a row.
 
-#### rowHeight: CollectionView.RowHeight
+* `rowHeight: CollectionView.RowHeight`
 
-Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
+    Not required. Defaults to CollectionView.RowHeight.sameAsItemWidth.
 
-An enum for setting the desired height for the collection view's rows.
+    An enum for setting the desired height for the collection view's rows.
 
-```swift
-public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
-    
-public enum RowHeight {
-    case constant(CGFloat)
-    case sameAsItemWidth
-    case dynamic(CollectionViewRowHeightBlock)
-}
- ```
+     ```swift
+     public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
+         
+     public enum RowHeight {
+         case constant(CGFloat)
+         case sameAsItemWidth
+         case dynamic(CollectionViewRowHeightBlock)
+     }
+      ```
 
-#### tapAction: ((Item, GeometryProxy) -> Void)?
+* `tapAction: ((Item, GeometryProxy) -> Void)?`
 
-Not required. Defaults to nil.
+    Not required. Defaults to nil.
 
-A block that will be called if an item is tapped on.
+    A block that will be called if an item is tapped on.
 
-#### itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)
+* `itemBuilder: @escaping (Item, _ collectionViewMetrics: GeometryProxy, _ itemMetrics: GeometryProxy) -> ItemContent)`
 
-Required.
+    Required.
 
-A block that produces the view (cell) associated with a particular item.
+    A block that produces the view (cell) associated with a particular item.
 
 ## Planned features:
 * Sections
