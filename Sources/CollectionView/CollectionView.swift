@@ -293,7 +293,9 @@ public struct CollectionView<Item, ItemContent>: View where ItemContent : View, 
                     GeometryReader { itemMetrics in
                         ZStack {
                             Group {
-                                self.itemBuilder(item, itemMetrics)
+                                if visible {
+                                    self.itemBuilder(item, itemMetrics)
+                                }
                                 if self.selectionMode.wrappedValue {
                                     Circle()
                                         .stroke(Color.white, lineWidth: 2)
