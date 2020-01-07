@@ -80,22 +80,23 @@ struct CollectionView_Previews: PreviewProvider {
     
     `Layout` is a struct containing the layout information for the collection view, with the defaults:
    
-        * `itemSpacing: CGFloat` = 2.0
-        * `numberOfColumns: Int` = 3   
-        * `rowHeight: CollectionView.RowHeight` = .sameAsItemWidth
+    * `itemSpacing: CGFloat` = 2.0
+    * `numberOfColumns: Int` = 3   
+    * `rowHeight: CollectionView.RowHeight` = .sameAsItemWidth
 
-            An enum for setting the desired height for the collection view's rows.
+        An enum for setting the desired height for the collection view's rows.
 
-             ```swift
-             public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
+         ```swift
+         public typealias CollectionViewRowHeightBlock = (_ row: Int, _ rowMetrics: GeometryProxy, _ itemSpacing: CGFloat, _ numberOfColumns: Int) -> CGFloat
 
-             public enum RowHeight {
-                 case constant(CGFloat)
-                 case sameAsItemWidth
-                 case dynamic(CollectionViewRowHeightBlock)
-             }
-              ```
-        * `rowPadding: EdgeInsets` = EdgeInsets initialized with all zeros.
+         public enum RowHeight {
+             case constant(CGFloat)
+             case sameAsItemWidth
+             case dynamic(CollectionViewRowHeightBlock)
+         }
+          ```
+    * `rowPadding: EdgeInsets` = EdgeInsets initialized with all zeros
+    * `scrollViewInsets: EdgeInsets` = EdgeInsets initialized with all zeros
 
 * `tapAction: ((Item, GeometryProxy) -> Void)?`
 
