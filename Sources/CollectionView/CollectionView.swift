@@ -28,6 +28,11 @@ public extension CollectionView {
         self.layout.rowHeight = rowHeight
         return self
     }
+    
+    func scrollViewInsets(_ scrollViewInsets: EdgeInsets) -> Self {
+        self.layout.scrollViewInsets = scrollViewInsets
+        return self
+    }
 }
 
 fileprivate let ScrollViewCoordinateSpaceKey = "ScrollViewCoordinateSpace"
@@ -52,20 +57,23 @@ public struct CollectionView<Item, ItemContent>: View where ItemContent: View, I
         }
     }
     
-    public struct Layout {
-        public var rowPadding: EdgeInsets
-        public var numberOfColumns: Int
-        public var itemSpacing: CGFloat
-        public var rowHeight: RowHeight
+    public class Layout: ObservableObject {
+        @Published public var rowPadding: EdgeInsets
+        @Published public var numberOfColumns: Int
+        @Published public var itemSpacing: CGFloat
+        @Published public var rowHeight: RowHeight
+        @Published public var scrollViewInsets: EdgeInsets
         
         public init(rowPadding: EdgeInsets = EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0),
                     numberOfColumns: Int = 3,
                     itemSpacing: CGFloat = 2,
-                    rowHeight: RowHeight = .sameAsItemWidth) {
+                    rowHeight: RowHeight = .sameAsItemWidth,
+                    scrollViewInsets: EdgeInsets = EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)) {
             self.rowPadding = rowPadding
             self.numberOfColumns = numberOfColumns
             self.itemSpacing = itemSpacing
             self.rowHeight = rowHeight
+            self.scrollViewInsets = scrollViewInsets
         }
     }
     
@@ -77,7 +85,7 @@ public struct CollectionView<Item, ItemContent>: View where ItemContent: View, I
         case dynamic(CollectionViewRowHeightBlock)
     }
     
-    @State private var layout: Layout = Layout()
+    @ObservedObject private var layout: Layout
     
     @Binding private var items: [Item]
     
@@ -146,12 +154,30 @@ public struct CollectionView<Item, ItemContent>: View where ItemContent: View, I
                 ScrollView {
                     VStack(spacing: self.itemSpacing) {
                         ForEach(rows) { row in
-                            self.getRow(for: row, metrics: metrics).padding(self.layout.rowPadding)
+                            self.getRow(for: row, metrics: metrics).padding(self.padding(for: row.id, rowCount: rows.count))
                         }
                     }.coordinateSpace(name: ScrollViewCoordinateSpaceKey)
-                }
+                }.padding(EdgeInsets(top: 0, leading: self.layout.scrollViewInsets.leading, bottom: 0, trailing: self.layout.scrollViewInsets.trailing))
             }
         }
+    }
+    
+    private func padding(for row: Int, rowCount: Int) -> EdgeInsets {
+        let leading = self.layout.rowPadding.leading
+        let trailing = self.layout.rowPadding.trailing
+        
+        var top = self.layout.rowPadding.top
+        var bottom = self.layout.rowPadding.bottom
+        
+        if row == 0 {
+            top += self.layout.scrollViewInsets.top
+        }
+        
+        if row == rowCount - 1 {
+            bottom += self.layout.scrollViewInsets.bottom
+        }
+        
+        return EdgeInsets(top: top, leading: leading, bottom: bottom, trailing: trailing)
     }
     
     private func getRow(for row: ItemRow, metrics: GeometryProxy) -> some View {
