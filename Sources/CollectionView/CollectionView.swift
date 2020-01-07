@@ -274,7 +274,11 @@ public struct CollectionView<Item, ItemContent>: View where ItemContent : View, 
                 ScrollView {
                     VStack(spacing: self.itemSpacing) {
                         ForEach(rows) { row in
-                            self.getRow(for: row, metrics: metrics, visible: true).padding(self.layout.rowPadding)
+                            
+                            LazyRowContainer(rowId: row.id, visibleRowsPublisher: self.store.$visibleRows, currentVisibleRows: self.store.visibleRows) { (visible) -> _ in
+                                self.getRow(for: row, metrics: metrics, visible: visible).padding(self.layout.rowPadding)
+
+                            }
                         }
                     }.onAppear(perform: {
                         self.store.mainMetrics = metrics
